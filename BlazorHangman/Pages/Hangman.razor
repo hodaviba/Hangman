@@ -1,0 +1,132 @@
+﻿@page "/hangman"
+
+<h1 class="text-center">Blazor Hangman</h1>
+
+<div class="float-right text-black">Errors: <span>@mistakes</span> of <span>@maxWrong</span> </div>
+
+<div class="text-center">
+    <img src="@currentImanges" />
+    <p>Guess the word</p>
+    
+    <WordSpotlight @ref="WordSpotlight"/>
+    @foreach(var letter in letters)
+    {
+        <Letter LetterValue="@letter" @ref="letterComponetes[letter]" OnPressed="() => HandleGuess(letter)"/>
+    }
+    
+    <p>@message</p>
+    <button class="btn btn-info" @onclick="Reset">Reset</button>
+</div>
+
+@code {
+    string letters = "abcdefghijklmnñopqrstuvwxyz";
+    string answer = string.Empty;
+    string message = string.Empty;
+
+    List<string> languages = new List<string>()
+    {
+        "python",
+        "csharp",
+        "rubi",
+        "javascript",
+        "sql",
+        "mongo",
+        "xaml"
+    };
+
+    List<char> guessed = new List<char>();
+
+    private WordSpotlight WordSpotlight;
+
+    Dictionary<char, Letter> letterComponetes = new Dictionary<char, Letter>();
+
+    int maxWrong = 6;
+    int mistakes;
+    string currentImanges = "/images/0.jpg";
+
+    private void PickWord()
+    {
+        answer = languages[new Random().Next(0, languages.Count)];
+        Console.WriteLine($"Palabra a adivinar: {answer}");
+    }
+
+    private void HandleGuess(char letter)
+    {
+        if (guessed.IndexOf(letter) == -1)
+        {
+            guessed.Add(letter);
+        }
+
+        if (answer.IndexOf(letter) >= 0)
+        {
+            WordSpotlight.CalculateWord(answer, guessed);
+            CheckIfGameWon();
+        }
+        else if (answer.IndexOf(letter) == -1)
+        {
+            mistakes++;
+            currentImanges = $"/images/{mistakes}.jpg";
+            CheckIfGameLost();
+        }
+        Console.WriteLine($"Letra oprimida: {letter}");
+    }
+
+    private void CheckIfGameWon()
+    {
+        if (WordSpotlight.WordStatus.Replace(" ", "") == answer)
+        {
+            message = "You Won!!!";
+            DisableLetters();
+        }    
+    }
+
+    private void CheckIfGameLost()
+    {
+        if (mistakes == maxWrong)
+        {
+            message = "You Lost!!!";
+            DisableLetters();
+        }
+    }
+
+    private void Reset()
+    {
+        mistakes = 0;
+        guessed = new List<char>();
+        currentImanges = "/images/0.jpg";
+        PickWord();
+        WordSpotlight.CalculateWord(answer, guessed);
+        EnableLetters();
+        message = string.Empty;
+    }
+
+    private void DisableLetters()
+    {
+        foreach (var letter in letterComponetes)
+        {
+            letter.Value.letterStyle = "disabled";
+            letter.Value.CanExecute = false;
+        }    
+    }
+
+    private void EnableLetters()
+    {
+        foreach (var letter in letterComponetes)
+        {
+            letter.Value.letterStyle = string.Empty;
+            letter.Value.CanExecute = true;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        PickWord();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        WordSpotlight.CalculateWord(answer, guessed);
+    }
+}

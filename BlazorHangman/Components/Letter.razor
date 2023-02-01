@@ -1,0 +1,24 @@
+﻿<button class="btn btn-lg btn-primary m-2 @letterStyle" @onclick="ButtonPressed">@LetterValue</button>
+
+@code {
+    public string letterStyle = string.Empty;
+
+    [Parameter]
+    public char LetterValue { get; set; }
+
+    [Parameter]
+    public EventCallback OnPressed { get; set; }
+
+
+    public bool CanExecute { get; set; } = true;
+
+    private void ButtonPressed()
+    {
+        if (CanExecute)
+        {
+            letterStyle = "disabled";
+            OnPressed.InvokeAsync(new EventArgs());
+            CanExecute = false;
+        }
+    }
+}
